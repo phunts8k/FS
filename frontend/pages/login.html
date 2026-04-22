@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — CouponHub</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Coupon<span>Hub</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="coupons.html">Coupons</a></li>
+      <li><a href="login.html" class="active" id="authLink">Login</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Split screen layout -->
+<div class="auth-wrap">
+
+  <!-- Left panel -->
+  <div class="auth-left">
+    <div class="auth-left-inner">
+      <div style="font-size:2.5rem; margin-bottom:1rem;">🎟️</div>
+      <h2>Save more,<br>spend less.</h2>
+      <p>Join CouponHub and unlock access to hundreds of verified discount codes.</p>
+      <ul>
+        <li>✅ 500+ active coupons</li>
+        <li>✅ Save your favourites</li>
+        <li>✅ One-click copy</li>
+        <li>✅ Updated daily</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <div class="auth-right">
+    <div class="auth-box">
+
+      <div>
+        <h2 style="font-size:1.5rem; font-weight:800;">Welcome back</h2>
+        <p class="text-muted" style="font-size:0.875rem; margin-top:0.2rem;">Login or create a new account</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin"  onclick="show('login')">Login</button>
+        <button class="auth-tab"        id="tabReg"    onclick="show('reg')">Register</button>
+      </div>
+
+      <!-- Error -->
+      <div id="errBox" class="alert alert-red" style="display:none"></div>
+
+      <!-- Login -->
+      <div id="loginForm" style="display:flex; flex-direction:column; gap:0.9rem;">
+        <div class="field"><label>Email</label><input type="email" id="lEmail" placeholder="you@example.com" /></div>
+        <div class="field"><label>Password</label><input type="password" id="lPass" placeholder="Your password" /></div>
+        <button class="btn btn-primary btn-full" id="loginBtn">Login</button>
+        <p style="text-align:center; font-size:0.78rem; color:var(--muted);">
+          Admin credentials: admin@test.com / admin123
+        </p>
+      </div>
+
+      <!-- Register -->
+      <div id="regForm" style="display:none; flex-direction:column; gap:0.9rem;">
+        <div class="field"><label>Full Name</label><input type="text"     id="rName"  placeholder="Your name" /></div>
+        <div class="field"><label>Email</label>     <input type="email"    id="rEmail" placeholder="you@example.com" /></div>
+        <div class="field"><label>Password</label>  <input type="password" id="rPass"  placeholder="Min 6 characters" /></div>
+        <button class="btn btn-primary btn-full" id="regBtn">Create Account</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="../js/utils.js"></script>
+<script>
+  if (isLoggedIn()) location.href = getUser()?.role === 'admin' ? 'admin.html' : 'dashboard.html';
+
+  function show(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('loginForm').style.display = isLogin ? 'flex' : 'none';
+    document.getElementById('regForm').style.display   = isLogin ? 'none' : 'flex';
+    document.getElementById('errBox').style.display    = 'none';
+    document.getElementById('tabLogin').classList.toggle('active',  isLogin);
+    document.getElementById('tabReg').classList.toggle('active',   !isLogin);
+  }
+
+  if (new URLSearchParams(location.search).get('tab') === 'reg') show('reg');
+
+  const showErr = (msg) => { const b = document.getElementById('errBox'); b.textContent = msg; b.style.display = ''; };
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('lEmail').value.trim();
+    const password = document.getElementById('lPass').value;
+    if (!email || !password) return showErr('Please fill both fields');
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = 'Logging in...';
+    try {
+      const data = await request('/auth/login', 'POST', { email, password });
+      saveAuth(data.token, data.user);
+      location.href = data.user.role === 'admin' ? 'admin.html' : 'dashboard.html';
+    } catch(e) { showErr(e.message); btn.disabled = false; btn.textContent = 'Login'; }
+  });
+
+  document.getElementById('regBtn').addEventListener('click', async () => {
+    const name = document.getElementById('rName').value.trim();
+    const email = document.getElementById('rEmail').value.trim();
+    const password = document.getElementById('rPass').value;
+    if (!name || !email || !password) return showErr('All fields required');
+    if (password.length < 6) return showErr('Password must be at least 6 characters');
+    const btn = document.getElementById('regBtn');
+    btn.disabled = true; btn.textContent = 'Creating...';
+    try {
+      const data = await request('/auth/register', 'POST', { name, email, password });
+      saveAuth(data.token, data.user);
+      location.href = 'dashboard.html';
+    } catch(e) { showErr(e.message); btn.disabled = false; btn.textContent = 'Create Account'; }
+  });
+
+  ['lEmail','lPass'].forEach(id =>
+    document.getElementById(id).addEventListener('keypress', e => {
+      if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    })
+  );
+</script>
+
+</body>
+</html>

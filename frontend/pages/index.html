@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CouponHub — Best Deals</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Coupon<span>Hub</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="coupons.html">Coupons</a></li>
+      <li class="hide-sm"><a href="dashboard.html" id="dashLink" style="display:none">Dashboard</a></li>
+      <li class="hide-sm"><a href="admin.html"     id="adminLink" style="display:none">Admin</a></li>
+      <li><a href="login.html" id="authLink">Login</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>Find & Copy<br><em>Discount Codes</em></h1>
+  <p>Hundreds of verified coupons across your favourite brands — one click away.</p>
+
+  <div class="hero-search">
+    <input id="searchInput" type="text" placeholder="Search Amazon, Zomato, Myntra..." />
+    <button id="searchBtn">Search →</button>
+  </div>
+
+  <!-- Categories inside hero-->
+  <div class="cat-pills">
+    <a class="cat-pill" href="coupons.html">All</a>
+    <a class="cat-pill" href="coupons.html?cat=Electronics">💻 Electronics</a>
+    <a class="cat-pill" href="coupons.html?cat=Fashion">👗 Fashion</a>
+    <a class="cat-pill" href="coupons.html?cat=Food">🍕 Food</a>
+    <a class="cat-pill" href="coupons.html?cat=Travel">✈️ Travel</a>
+    <a class="cat-pill" href="coupons.html?cat=Beauty">💄 Beauty</a>
+    <a class="cat-pill" href="coupons.html?cat=Other">🎁 Other</a>
+  </div>
+</section>
+
+<!-- coupons -->
+<div class="container page">
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:1.5rem;">
+    <div class="page-header" style="margin:0">
+      <h1>Featured Deals</h1>
+      <p>Freshly added coupon codes</p>
+    </div>
+    <a href="coupons.html" class="btn btn-ghost btn-sm">View all →</a>
+  </div>
+
+  <div id="spinner" class="spinner"></div>
+  <div id="coupons" class="grid"></div>
+</div>
+
+<script src="../js/utils.js"></script>
+<script>
+  async function load() {
+    try {
+      const { coupons } = await request('/coupons');
+      document.getElementById('spinner').remove();
+
+      let savedIds = [];
+      if (isLoggedIn()) {
+        try {
+          const { user } = await request('/users/dashboard', 'GET', null, true);
+          savedIds = user.savedCoupons.map(c => c._id);
+        } catch(e) {}
+      }
+
+      const grid = document.getElementById('coupons');
+      grid.innerHTML = coupons.slice(0, 6).map(c => couponCard(c, savedIds)).join('');
+      attachCardEvents(grid);
+    } catch(e) {
+      document.getElementById('spinner').remove();
+      document.getElementById('coupons').innerHTML =
+        `<p style="color:var(--danger)">Could not load coupons — is the server running?</p>`;
+    }
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    const q = document.getElementById('searchInput').value.trim();
+    location.href = q ? `coupons.html?search=${encodeURIComponent(q)}` : 'coupons.html';
+  });
+  document.getElementById('searchInput').addEventListener('keypress', e => {
+    if (e.key === 'Enter') document.getElementById('searchBtn').click();
+  });
+
+  document.addEventListener('DOMContentLoaded', load);
+</script>
+
+</body>
+</html>
