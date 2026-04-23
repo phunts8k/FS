@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — CouponHub</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Coupon<span>Hub</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="coupons.html">Coupons</a></li>
+      <li><a href="dashboard.html" class="active" id="dashLink">Dashboard</a></li>
+      <li class="hide-sm"><a href="admin.html" id="adminLink" style="display:none">Admin</a></li>
+      <li><a href="#" id="authLink">Logout</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Gradient header -->
+<div class="dash-header">
+  <div class="container" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1 id="welcomeMsg">My Dashboard</h1>
+      <p id="userEmail"></p>
+    </div>
+    <a href="coupons.html" class="btn btn-ghost" style="border-color:rgba(255,255,255,0.4); color:white;">
+      Browse More →
+    </a>
+  </div>
+</div>
+
+<div class="container page">
+
+  <!-- Stat cards -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card">
+      <div class="num" id="statSaved">—</div>
+      <div class="lbl">Saved Coupons</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color:var(--accent);" id="statName">—</div>
+      <div class="lbl">Account Name</div>
+    </div>
+  </div>
+
+  <hr style="margin-bottom:1.75rem;" />
+
+  <!-- Saved coupons section -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.5rem;">
+    <h2 style="font-size:1.1rem; font-weight:700;">❤️ Saved Coupons</h2>
+    <span id="savedCount" style="font-size:0.82rem; color:var(--muted);"></span>
+  </div>
+
+  <div id="spinner" class="spinner"></div>
+  <div id="savedGrid" class="grid"></div>
+
+</div>
+
+<script src="../js/utils.js"></script>
+<script>
+  if (!isLoggedIn()) location.href = 'login.html';
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = getUser();
+    document.getElementById('welcomeMsg').textContent = `Welcome, ${user.name} 👋`;
+    document.getElementById('userEmail').textContent  = user.email;
+    document.getElementById('statName').textContent   = user.name;
+
+    try {
+      const { user: full } = await request('/users/dashboard', 'GET', null, true);
+      document.getElementById('spinner').remove();
+
+      const saved = full.savedCoupons;
+      document.getElementById('statSaved').textContent  = saved.length;
+      document.getElementById('savedCount').textContent = `${saved.length} coupon${saved.length !== 1 ? 's' : ''}`;
+
+      const grid = document.getElementById('savedGrid');
+      if (!saved.length) {
+        grid.innerHTML = `
+          <div class="empty" style="grid-column:1/-1">
+            <div class="empty-icon">💜</div>
+            <p>No saved coupons yet. <a href="coupons.html" style="color:var(--primary); font-weight:600;">Browse deals →</a></p>
+          </div>`;
+        return;
+      }
+
+      const savedIds = saved.map(c => c._id);
+      grid.innerHTML = saved.map(c => couponCard(c, savedIds)).join('');
+
+      // Copy buttons
+      grid.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          await copyText(btn.dataset.code);
+          const orig = btn.textContent; btn.textContent = 'Copied!';
+          setTimeout(() => btn.textContent = orig, 1800);
+          toast(`"${btn.dataset.code}" copied!`);
+        });
+      });
+
+      // Save buttons — unsave and remove card
+      grid.querySelectorAll('.save-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          try {
+            const res = await request(`/coupons/${btn.dataset.id}/save`, 'POST', null, true);
+            if (!res.saved) {
+              const card = btn.closest('.coupon-card');
+              card.style.transition = 'opacity 0.25s'; card.style.opacity = '0';
+              setTimeout(() => {
+                card.remove();
+                const n = grid.querySelectorAll('.coupon-card').length;
+                document.getElementById('statSaved').textContent  = n;
+                document.getElementById('savedCount').textContent = `${n} coupon${n !== 1 ? 's' : ''}`;
+                if (!n) grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">💜</div><p>No saved coupons. <a href="coupons.html" style="color:var(--primary);font-weight:600">Browse deals →</a></p></div>`;
+              }, 250);
+              toast('Removed from saved');
+            }
+          } catch(e) { toast(e.message); }
+        });
+      });
+
+    } catch(e) {
+      document.getElementById('spinner').remove();
+      document.getElementById('savedGrid').innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+    }
+  });
+</script>
+
+</body>
+</html>
