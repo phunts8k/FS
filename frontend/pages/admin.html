@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — CouponHub</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Coupon<span>Hub</span></a>
+    <ul class="nav-links">
+      <li><a href="coupons.html">Coupons</a></li>
+      <li><a href="admin.html" class="active" id="adminLink">Admin</a></li>
+      <li><a href="#" id="authLink">Logout</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Header -->
+<div class="dash-header">
+  <div class="container">
+    <h1>Admin Panel</h1>
+    <p>Manage all coupon codes from here</p>
+  </div>
+</div>
+
+<div class="container page">
+
+  <!-- Add coupon form -->
+  <div class="card" style="max-width:640px; margin-bottom:2.5rem;">
+    <h2 style="font-size:1rem; font-weight:700; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:1px solid var(--border);">
+      ➕ Add New Coupon
+    </h2>
+    <div id="addAlert"></div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem;">
+      <div class="field"><label>Brand *</label>   <input id="fBrand"   placeholder="e.g. Amazon" /></div>
+      <div class="field"><label>Code *</label>    <input id="fCode"    placeholder="e.g. SAVE20" /></div>
+      <div class="field"><label>Discount *</label><input id="fDiscount" placeholder="e.g. 20% OFF" /></div>
+      <div class="field">
+        <label>Category *</label>
+        <select id="fCat">
+          <option value="">Select...</option>
+          <option>Electronics</option><option>Fashion</option><option>Food</option>
+          <option>Travel</option><option>Beauty</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:1/-1">
+        <label>Description *</label>
+        <input id="fDesc" placeholder="Short description of the offer" />
+      </div>
+      <div class="field">
+        <label>Expiry Date *</label>
+        <input id="fExpiry" type="date" />
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="addBtn" style="margin-top:1.1rem;">Add Coupon</button>
+  </div>
+
+  <!-- Manage table -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; flex-wrap:wrap; gap:0.5rem;">
+    <h2 style="font-size:1rem; font-weight:700;">📋 All Coupons</h2>
+    <button class="btn btn-ghost btn-sm" id="reloadBtn">↻ Refresh</button>
+  </div>
+
+  <div id="tableSpinner" class="spinner"></div>
+
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Brand</th><th>Code</th><th>Discount</th>
+            <th>Category</th><th>Expires</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Edit modal -->
+<div class="modal-bg" id="editModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>✏️ Edit Coupon</h3>
+      <button class="modal-close" id="closeModal">✕</button>
+    </div>
+    <input type="hidden" id="eId" />
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem;">
+      <div class="field"><label>Brand</label>   <input id="eBrand" /></div>
+      <div class="field"><label>Code</label>    <input id="eCode"  /></div>
+      <div class="field"><label>Discount</label><input id="eDiscount" /></div>
+      <div class="field">
+        <label>Category</label>
+        <select id="eCat">
+          <option>Electronics</option><option>Fashion</option><option>Food</option>
+          <option>Travel</option><option>Beauty</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:1/-1">
+        <label>Description</label><input id="eDesc" />
+      </div>
+      <div class="field"><label>Expiry Date</label><input id="eExpiry" type="date" /></div>
+    </div>
+    <button class="btn btn-primary btn-full" id="saveEditBtn" style="margin-top:0.5rem;">Save Changes</button>
+  </div>
+</div>
+
+<script src="../js/utils.js"></script>
+<script>
+  if (!isLoggedIn() || getUser()?.role !== 'admin') location.href = 'login.html';
+
+  let allCoupons = [];
+
+  async function loadTable() {
+    document.getElementById('tableSpinner').style.display = 'block';
+    document.getElementById('tableBody').innerHTML = '';
+    try {
+      const { coupons } = await request('/coupons');
+      allCoupons = coupons;
+      document.getElementById('tableSpinner').style.display = 'none';
+      document.getElementById('tableBody').innerHTML = coupons.map(c => `
+        <tr>
+          <td style="font-weight:600">${c.brand}</td>
+          <td><code>${c.code}</code></td>
+          <td>${c.discount}</td>
+          <td><span style="background:#ede9fe;color:var(--primary);font-size:0.72rem;padding:2px 8px;border-radius:20px;font-weight:600;">${c.category}</span></td>
+          <td style="${isExpired(c.expiryDate) ? 'color:var(--danger);font-weight:600' : ''}">${fmtDate(c.expiryDate)}</td>
+          <td>
+            <div style="display:flex;gap:0.4rem;">
+              <button class="btn btn-ghost btn-sm"   onclick="openEdit('${c._id}')">Edit</button>
+              <button class="btn btn-danger btn-sm"  onclick="del('${c._id}', this)">Delete</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    } catch(e) {
+      document.getElementById('tableSpinner').style.display = 'none';
+      toast('Failed: ' + e.message);
+    }
+  }
+
+  // Add coupon
+  document.getElementById('addBtn').addEventListener('click', async () => {
+    const body = {
+      brand:       document.getElementById('fBrand').value.trim(),
+      code:        document.getElementById('fCode').value.trim(),
+      discount:    document.getElementById('fDiscount').value.trim(),
+      category:    document.getElementById('fCat').value,
+      description: document.getElementById('fDesc').value.trim(),
+      expiryDate:  document.getElementById('fExpiry').value,
+    };
+    if (!body.brand || !body.code || !body.discount || !body.category || !body.description || !body.expiryDate)
+      return showAddAlert('Please fill all required fields', 'red');
+
+    const btn = document.getElementById('addBtn');
+    btn.disabled = true; btn.textContent = 'Adding...';
+    try {
+      await request('/coupons', 'POST', body, true);
+      showAddAlert('Coupon added successfully!', 'green');
+      ['fBrand','fCode','fDiscount','fDesc','fExpiry'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('fCat').value = '';
+      loadTable();
+    } catch(e) { showAddAlert(e.message, 'red'); }
+    finally { btn.disabled = false; btn.textContent = 'Add Coupon'; }
+  });
+
+  function showAddAlert(msg, type) {
+    const el = document.getElementById('addAlert');
+    el.className = `alert alert-${type}`; el.textContent = msg; el.style.display = '';
+    setTimeout(() => el.style.display = 'none', 3000);
+  }
+
+  // Delete
+  async function del(id, btn) {
+    if (!confirm('Delete this coupon?')) return;
+    try {
+      await request('/coupons/' + id, 'DELETE', null, true);
+      btn.closest('tr').remove(); toast('Deleted');
+    } catch(e) { toast(e.message); }
+  }
+
+  // Open edit modal
+  function openEdit(id) {
+    const c = allCoupons.find(c => c._id === id); if (!c) return;
+    document.getElementById('eId').value       = c._id;
+    document.getElementById('eBrand').value    = c.brand;
+    document.getElementById('eCode').value     = c.code;
+    document.getElementById('eDiscount').value = c.discount;
+    document.getElementById('eCat').value      = c.category;
+    document.getElementById('eDesc').value     = c.description;
+    document.getElementById('eExpiry').value   = c.expiryDate.split('T')[0];
+    document.getElementById('editModal').classList.add('open');
+  }
+
+  document.getElementById('closeModal').onclick = () =>
+    document.getElementById('editModal').classList.remove('open');
+
+  document.getElementById('saveEditBtn').addEventListener('click', async () => {
+    const id   = document.getElementById('eId').value;
+    const body = {
+      brand:       document.getElementById('eBrand').value.trim(),
+      code:        document.getElementById('eCode').value.trim(),
+      discount:    document.getElementById('eDiscount').value.trim(),
+      category:    document.getElementById('eCat').value,
+      description: document.getElementById('eDesc').value.trim(),
+      expiryDate:  document.getElementById('eExpiry').value,
+    };
+    try {
+      await request('/coupons/' + id, 'PUT', body, true);
+      document.getElementById('editModal').classList.remove('open');
+      toast('Updated!'); loadTable();
+    } catch(e) { toast(e.message); }
+  });
+
+  document.getElementById('reloadBtn').addEventListener('click', loadTable);
+  document.addEventListener('DOMContentLoaded', loadTable);
+</script>
+
+</body>
+</html>
