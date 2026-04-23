@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coupons — CouponHub</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">Coupon<span>Hub</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="coupons.html" class="active">Coupons</a></li>
+      <li class="hide-sm"><a href="dashboard.html" id="dashLink" style="display:none">Dashboard</a></li>
+      <li class="hide-sm"><a href="admin.html"     id="adminLink" style="display:none">Admin</a></li>
+      <li><a href="login.html" id="authLink">Login</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Sticky filter bar (just below navbar) -->
+<div class="filter-bar">
+  <input  id="searchInput" type="text" placeholder="🔍  Search brand, code, description..." />
+  <select id="catFilter">
+    <option value="All">All Categories</option>
+    <option value="Electronics">💻 Electronics</option>
+    <option value="Fashion">👗 Fashion</option>
+    <option value="Food">🍕 Food</option>
+    <option value="Travel">✈️ Travel</option>
+    <option value="Beauty">💄 Beauty</option>
+    <option value="Other">🎁 Other</option>
+  </select>
+  <button class="btn btn-primary" id="searchBtn">Search</button>
+  <button class="btn btn-ghost"   id="clearBtn">Clear</button>
+</div>
+
+<div class="container page">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.5rem;">
+    <div class="page-header" style="margin:0">
+      <h1>All Coupons</h1>
+    </div>
+    <p id="resultsInfo" style="font-size:0.82rem; color:var(--muted);"></p>
+  </div>
+
+  <div id="spinner" class="spinner"></div>
+  <div id="couponsGrid" class="grid"></div>
+</div>
+
+<script src="../js/utils.js"></script>
+<script>
+  let savedIds = [];
+
+  async function load() {
+    const search = document.getElementById('searchInput').value.trim();
+    const cat    = document.getElementById('catFilter').value;
+    const params = new URLSearchParams();
+    if (search)        params.set('search', search);
+    if (cat !== 'All') params.set('category', cat);
+
+    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('couponsGrid').innerHTML  = '';
+
+    try {
+      const { coupons } = await request('/coupons?' + params);
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('resultsInfo').textContent = `${coupons.length} result${coupons.length !== 1 ? 's' : ''}`;
+
+      const grid = document.getElementById('couponsGrid');
+      if (!coupons.length) {
+        grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><p>No coupons found. Try a different search.</p></div>`;
+        return;
+      }
+      grid.innerHTML = coupons.map(c => couponCard(c, savedIds)).join('');
+      attachCardEvents(grid);
+    } catch(e) {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('couponsGrid').innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+    }
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', load);
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('catFilter').value   = 'All';
+    load();
+  });
+  document.getElementById('searchInput').addEventListener('keypress', e => { if (e.key === 'Enter') load(); });
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const p = new URLSearchParams(location.search);
+    if (p.get('search')) document.getElementById('searchInput').value = p.get('search');
+    if (p.get('cat'))    document.getElementById('catFilter').value   = p.get('cat');
+    if (isLoggedIn()) {
+      try {
+        const { user } = await request('/users/dashboard', 'GET', null, true);
+        savedIds = user.savedCoupons.map(c => c._id);
+      } catch(e) {}
+    }
+    load();
+  });
+</script>
+
+</body>
+</html>
