@@ -10,16 +10,15 @@
 
 <nav class="navbar">
   <div class="nav-inner">
-    <a href="index.html" class="nav-logo">Coupon<span>Hub</span></a>
+    <a href="../index.html" class="nav-logo">Coupon<span>Hub</span></a>
     <ul class="nav-links">
-      <li><a href="coupons.html">Coupons</a></li>
-      <li><a href="admin.html" class="active" id="adminLink">Admin</a></li>
+      <li><a href="./coupons.html">Coupons</a></li>
+      <li><a href="./admin.html" class="active" id="adminLink">Admin</a></li>
       <li><a href="#" id="authLink">Logout</a></li>
     </ul>
   </div>
 </nav>
 
-<!-- Header -->
 <div class="dash-header">
   <div class="container">
     <h1>Admin Panel</h1>
@@ -29,7 +28,6 @@
 
 <div class="container page">
 
-  <!-- Add coupon form -->
   <div class="card" style="max-width:640px; margin-bottom:2.5rem;">
     <h2 style="font-size:1rem; font-weight:700; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:1px solid var(--border);">
       ➕ Add New Coupon
@@ -37,9 +35,9 @@
     <div id="addAlert"></div>
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem;">
-      <div class="field"><label>Brand *</label>   <input id="fBrand"   placeholder="e.g. Amazon" /></div>
-      <div class="field"><label>Code *</label>    <input id="fCode"    placeholder="e.g. SAVE20" /></div>
-      <div class="field"><label>Discount *</label><input id="fDiscount" placeholder="e.g. 20% OFF" /></div>
+      <div class="field"><label>Brand *</label>   <input id="fBrand" /></div>
+      <div class="field"><label>Code *</label>    <input id="fCode" /></div>
+      <div class="field"><label>Discount *</label><input id="fDiscount" /></div>
       <div class="field">
         <label>Category *</label>
         <select id="fCat">
@@ -50,7 +48,7 @@
       </div>
       <div class="field" style="grid-column:1/-1">
         <label>Description *</label>
-        <input id="fDesc" placeholder="Short description of the offer" />
+        <input id="fDesc" />
       </div>
       <div class="field">
         <label>Expiry Date *</label>
@@ -61,7 +59,6 @@
     <button class="btn btn-primary" id="addBtn" style="margin-top:1.1rem;">Add Coupon</button>
   </div>
 
-  <!-- Manage table -->
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; flex-wrap:wrap; gap:0.5rem;">
     <h2 style="font-size:1rem; font-weight:700;">📋 All Coupons</h2>
     <button class="btn btn-ghost btn-sm" id="reloadBtn">↻ Refresh</button>
@@ -85,7 +82,6 @@
 
 </div>
 
-<!-- Edit modal -->
 <div class="modal-bg" id="editModal">
   <div class="modal-box">
     <div class="modal-header">
@@ -94,8 +90,8 @@
     </div>
     <input type="hidden" id="eId" />
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem;">
-      <div class="field"><label>Brand</label>   <input id="eBrand" /></div>
-      <div class="field"><label>Code</label>    <input id="eCode"  /></div>
+      <div class="field"><label>Brand</label><input id="eBrand" /></div>
+      <div class="field"><label>Code</label><input id="eCode" /></div>
       <div class="field"><label>Discount</label><input id="eDiscount" /></div>
       <div class="field">
         <label>Category</label>
@@ -115,7 +111,7 @@
 
 <script src="../js/utils.js"></script>
 <script>
-  if (!isLoggedIn() || getUser()?.role !== 'admin') location.href = 'login.html';
+  if (!isLoggedIn() || getUser()?.role !== 'admin') location.href = './login.html';
 
   let allCoupons = [];
 
@@ -135,8 +131,8 @@
           <td style="${isExpired(c.expiryDate) ? 'color:var(--danger);font-weight:600' : ''}">${fmtDate(c.expiryDate)}</td>
           <td>
             <div style="display:flex;gap:0.4rem;">
-              <button class="btn btn-ghost btn-sm"   onclick="openEdit('${c._id}')">Edit</button>
-              <button class="btn btn-danger btn-sm"  onclick="del('${c._id}', this)">Delete</button>
+              <button class="btn btn-ghost btn-sm" onclick="openEdit('${c._id}')">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="del('${c._id}', this)">Delete</button>
             </div>
           </td>
         </tr>`).join('');
@@ -146,7 +142,6 @@
     }
   }
 
-  // Add coupon
   document.getElementById('addBtn').addEventListener('click', async () => {
     const body = {
       brand:       document.getElementById('fBrand').value.trim(),
@@ -177,7 +172,6 @@
     setTimeout(() => el.style.display = 'none', 3000);
   }
 
-  // Delete
   async function del(id, btn) {
     if (!confirm('Delete this coupon?')) return;
     try {
@@ -186,7 +180,6 @@
     } catch(e) { toast(e.message); }
   }
 
-  // Open edit modal
   function openEdit(id) {
     const c = allCoupons.find(c => c._id === id); if (!c) return;
     document.getElementById('eId').value       = c._id;
