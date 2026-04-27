@@ -4,19 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CouponHub — Best Deals</title>
-  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
 
 <nav class="navbar">
   <div class="nav-inner">
-    <a href="./index.html" class="nav-logo">Coupon<span>Hub</span></a>
+    <a href="index.html" class="nav-logo">Coupon<span>Hub</span></a>
     <ul class="nav-links">
-      <li><a href="./index.html" class="active">Home</a></li>
-      <li><a href="./pages/coupons.html">Coupons</a></li>
-      <li class="hide-sm"><a href="./pages/dashboard.html" id="dashLink" style="display:none">Dashboard</a></li>
-      <li class="hide-sm"><a href="./pages/admin.html" id="adminLink" style="display:none">Admin</a></li>
-      <li><a href="./pages/login.html" id="authLink">Login</a></li>
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="coupons.html">Coupons</a></li>
+      <li class="hide-sm"><a href="dashboard.html" id="dashLink" style="display:none">Dashboard</a></li>
+      <li class="hide-sm"><a href="admin.html"     id="adminLink" style="display:none">Admin</a></li>
+      <li><a href="login.html" id="authLink">Login</a></li>
     </ul>
   </div>
 </nav>
@@ -33,13 +33,13 @@
 
   <!-- Categories inside hero-->
   <div class="cat-pills">
-    <a class="cat-pill" href="./pages/coupons.html">All</a>
-    <a class="cat-pill" href="./pages/coupons.html?cat=Electronics">💻 Electronics</a>
-    <a class="cat-pill" href="./pages/coupons.html?cat=Fashion">👗 Fashion</a>
-    <a class="cat-pill" href="./pages/coupons.html?cat=Food">🍕 Food</a>
-    <a class="cat-pill" href="./pages/coupons.html?cat=Travel">✈️ Travel</a>
-    <a class="cat-pill" href="./pages/coupons.html?cat=Beauty">💄 Beauty</a>
-    <a class="cat-pill" href="./pages/coupons.html?cat=Other">🎁 Other</a>
+    <a class="cat-pill" href="coupons.html">All</a>
+    <a class="cat-pill" href="coupons.html?cat=Electronics">💻 Electronics</a>
+    <a class="cat-pill" href="coupons.html?cat=Fashion">👗 Fashion</a>
+    <a class="cat-pill" href="coupons.html?cat=Food">🍕 Food</a>
+    <a class="cat-pill" href="coupons.html?cat=Travel">✈️ Travel</a>
+    <a class="cat-pill" href="coupons.html?cat=Beauty">💄 Beauty</a>
+    <a class="cat-pill" href="coupons.html?cat=Other">🎁 Other</a>
   </div>
 </section>
 
@@ -50,14 +50,14 @@
       <h1>Featured Deals</h1>
       <p>Freshly added coupon codes</p>
     </div>
-    <a href="./pages/coupons.html" class="btn btn-ghost btn-sm">View all →</a>
+    <a href="coupons.html" class="btn btn-ghost btn-sm">View all →</a>
   </div>
 
   <div id="spinner" class="spinner"></div>
   <div id="coupons" class="grid"></div>
 </div>
 
-<script src="./js/utils.js"></script>
+<script src="../js/utils.js"></script>
 <script>
   async function load() {
     try {
@@ -84,9 +84,8 @@
 
   document.getElementById('searchBtn').addEventListener('click', () => {
     const q = document.getElementById('searchInput').value.trim();
-    location.href = q ? `./pages/coupons.html?search=${encodeURIComponent(q)}` : './pages/coupons.html';
+    location.href = q ? `coupons.html?search=${encodeURIComponent(q)}` : 'coupons.html';
   });
-
   document.getElementById('searchInput').addEventListener('keypress', e => {
     if (e.key === 'Enter') document.getElementById('searchBtn').click();
   });
@@ -95,4 +94,4 @@
 </script>
 
 </body>
-</html>
+</html> 
