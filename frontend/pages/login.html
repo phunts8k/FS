@@ -40,7 +40,7 @@
 
       <div>
         <h2 style="font-size:1.5rem; font-weight:800;">Welcome back</h2>
-        <p class="text-muted" style="font-size:0.875rem;">Login or create a new account</p>
+        <p class="text-muted" style="font-size:0.875rem; margin-top:0.2rem;">Login or create a new account</p>
       </div>
 
       <div class="auth-tabs">
@@ -50,15 +50,13 @@
 
       <div id="errBox" class="alert alert-red" style="display:none"></div>
 
-      <!-- Login -->
-      <div id="loginForm">
+      <div id="loginForm" style="display:flex; flex-direction:column; gap:0.9rem;">
         <div class="field"><label>Email</label><input type="email" id="lEmail" /></div>
         <div class="field"><label>Password</label><input type="password" id="lPass" /></div>
         <button class="btn btn-primary btn-full" id="loginBtn">Login</button>
       </div>
 
-      <!-- Register -->
-      <div id="regForm" style="display:none">
+      <div id="regForm" style="display:none; flex-direction:column; gap:0.9rem;">
         <div class="field"><label>Name</label><input type="text" id="rName" /></div>
         <div class="field"><label>Email</label><input type="email" id="rEmail" /></div>
         <div class="field"><label>Password</label><input type="password" id="rPass" /></div>
@@ -72,44 +70,54 @@
 <script src="../js/utils.js"></script>
 
 <script>
-  if (isLoggedIn()) location.href = getUser()?.role === 'admin'
-    ? './admin.html'
-    : './dashboard.html';
+  if (isLoggedIn()) location.href = getUser()?.role === 'admin' ? './admin.html' : './dashboard.html';
 
   function show(tab) {
     const isLogin = tab === 'login';
-    document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
-    document.getElementById('regForm').style.display = isLogin ? 'none' : 'block';
+    document.getElementById('loginForm').style.display = isLogin ? 'flex' : 'none';
+    document.getElementById('regForm').style.display   = isLogin ? 'none' : 'flex';
+    document.getElementById('errBox').style.display    = 'none';
+    document.getElementById('tabLogin').classList.toggle('active',  isLogin);
+    document.getElementById('tabReg').classList.toggle('active',   !isLogin);
   }
 
+  if (new URLSearchParams(location.search).get('tab') === 'reg') show('reg');
+
+  const showErr = (msg) => { const b = document.getElementById('errBox'); b.textContent = msg; b.style.display = ''; };
+
   document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('lEmail').value.trim();
+    const password = document.getElementById('lPass').value;
+    if (!email || !password) return showErr('Please fill both fields');
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = 'Logging in...';
     try {
-      const data = await request('/auth/login', 'POST', {
-        email: lEmail.value,
-        password: lPass.value
-      });
+      const data = await request('/auth/login', 'POST', { email, password });
       saveAuth(data.token, data.user);
-      location.href = data.user.role === 'admin'
-        ? './admin.html'
-        : './dashboard.html';
-    } catch (e) {
-      alert(e.message);
-    }
+      location.href = data.user.role === 'admin' ? './admin.html' : './dashboard.html';
+    } catch(e) { showErr(e.message); btn.disabled = false; btn.textContent = 'Login'; }
   });
 
   document.getElementById('regBtn').addEventListener('click', async () => {
+    const name = document.getElementById('rName').value.trim();
+    const email = document.getElementById('rEmail').value.trim();
+    const password = document.getElementById('rPass').value;
+    if (!name || !email || !password) return showErr('All fields required');
+    if (password.length < 6) return showErr('Password must be at least 6 characters');
+    const btn = document.getElementById('regBtn');
+    btn.disabled = true; btn.textContent = 'Creating...';
     try {
-      const data = await request('/auth/register', 'POST', {
-        name: rName.value,
-        email: rEmail.value,
-        password: rPass.value
-      });
+      const data = await request('/auth/register', 'POST', { name, email, password });
       saveAuth(data.token, data.user);
       location.href = './dashboard.html';
-    } catch (e) {
-      alert(e.message);
-    }
+    } catch(e) { showErr(e.message); btn.disabled = false; btn.textContent = 'Create Account'; }
   });
+
+  ['lEmail','lPass'].forEach(id =>
+    document.getElementById(id).addEventListener('keypress', e => {
+      if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    })
+  );
 </script>
 
 </body>
