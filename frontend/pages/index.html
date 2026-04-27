@@ -31,7 +31,7 @@
     <button id="searchBtn">Search →</button>
   </div>
 
-  <!-- Categories -->
+  <!-- Categories inside hero-->
   <div class="cat-pills">
     <a class="cat-pill" href="./pages/coupons.html">All</a>
     <a class="cat-pill" href="./pages/coupons.html?cat=Electronics">💻 Electronics</a>
@@ -58,7 +58,6 @@
 </div>
 
 <script src="./js/utils.js"></script>
-
 <script>
   async function load() {
     try {
@@ -85,9 +84,7 @@
 
   document.getElementById('searchBtn').addEventListener('click', () => {
     const q = document.getElementById('searchInput').value.trim();
-    location.href = q
-      ? `./pages/coupons.html?search=${encodeURIComponent(q)}`
-      : './pages/coupons.html';
+    location.href = q ? `./pages/coupons.html?search=${encodeURIComponent(q)}` : './pages/coupons.html';
   });
 
   document.getElementById('searchInput').addEventListener('keypress', e => {
