@@ -1,6 +1,6 @@
 // js/utils.js — Shared helpers used on every page
 
-const API = 'http://localhost:5000/api';
+const API = 'https://couponhub-backend-adnp.onrender.com';
 
 /* ── Token & User stored in localStorage ── */
 const getToken = ()     => localStorage.getItem('token');
